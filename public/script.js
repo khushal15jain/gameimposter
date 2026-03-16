@@ -150,7 +150,7 @@ socket.on('gameStarted', ({ role, word, turnOrder, currentTurn }) => {
     document.getElementById('role-text').innerText = role === 'imposter' ? 'YOU ARE THE IMPOSTER' : 'YOUR WORD IS';
     document.getElementById('role-display').className = `role-box ${role}`;
     document.getElementById('word-text').innerText = role === 'imposter' ? 'GUESS IT!' : word;
-    
+
     clueList.innerHTML = "";
     updateTurnIndicator(currentTurn);
     showScreen('game');
@@ -194,7 +194,8 @@ socket.on('promptGuess', () => {
     // Handled in survival
 });
 
-socket.on('gameResult', ({ winner, imposterName, secretWord, guess, scores }) => {
+socket.on('gameResult', (data) => {
+    const { winner, imposterName, secretWord, guess, scores } = data;
     const title = document.getElementById('result-title');
     if ((winner === 'players' && document.getElementById('role-text').innerText !== 'YOU ARE THE IMPOSTER') ||
         (winner === 'imposter' && document.getElementById('role-text').innerText === 'YOU ARE THE IMPOSTER')) {
@@ -210,11 +211,18 @@ socket.on('gameResult', ({ winner, imposterName, secretWord, guess, scores }) =>
 
     document.getElementById('res-imposter-name').innerText = imposterName;
     document.getElementById('res-secret-word').innerText = secretWord;
-    document.getElementById('res-guess-info').innerText = guess ? `Imposter guessed: ${guess}` : "";
     
+    let infoText = "";
+    if (winner === 'imposter' && data.votedOutName) {
+        infoText = `${data.votedOutName} was voted out! Imposter wins!`;
+    } else if (guess) {
+        infoText = `Imposter guessed: ${guess}`;
+    }
+    document.getElementById('res-guess-info').innerText = infoText;
+
     const scoreList = document.getElementById('scoreboard-list');
     scoreList.innerHTML = "";
-    scores.sort((a,b) => b.score - a.score).forEach(s => {
+    scores.sort((a, b) => b.score - a.score).forEach(s => {
         scoreList.innerHTML += `<li class="player-item"><span>${s.name}</span><span>${s.score} pts</span></li>`;
     });
 

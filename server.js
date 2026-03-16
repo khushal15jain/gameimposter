@@ -108,9 +108,16 @@ io.on('connection', (socket) => {
                 room.currentTurnIndex++;
 
                 if (room.currentTurnIndex >= room.turnOrder.length) {
-                    // Start voting phase
-                    room.status = 'voting';
-                    io.to(roomCode).emit('votingPhase', { clues: room.clues, players: Object.values(room.players).map(p => ({id: p.id, name: p.name})) });
+                    // Notify everyone of the last clue and impending transition
+                    io.to(roomCode).emit('clueUpdate', { clues: room.clues, currentTurn: 'Voting starts in 3s...' });
+                    
+                    // Delay voting phase by 3 seconds
+                    setTimeout(() => {
+                        if (rooms[roomCode] && rooms[roomCode].status === 'playing') {
+                            rooms[roomCode].status = 'voting';
+                            io.to(roomCode).emit('votingPhase', { clues: rooms[roomCode].clues, players: Object.values(rooms[roomCode].players).map(p => ({ id: p.id, name: p.name })) });
+                        }
+                    }, 3000);
                 } else {
                     const nextPlayerId = room.turnOrder[room.currentTurnIndex];
                     io.to(roomCode).emit('clueUpdate', { clues: room.clues, currentTurn: room.players[nextPlayerId].name });
@@ -149,20 +156,23 @@ io.on('connection', (socket) => {
                     Object.keys(room.players).forEach(pid => {
                         if (pid !== room.imposterId) room.players[pid].score += 1;
                     });
-                    io.to(roomCode).emit('gameResult', { 
-                        winner: 'players', 
-                        imposterName: room.players[room.imposterId].name, 
+                    io.to(roomCode).emit('gameResult', {
+                        winner: 'players',
+                        imposterName: room.players[room.imposterId].name,
                         secretWord: room.secretWord,
-                        scores: Object.values(room.players).map(p => ({name: p.name, score: p.score}))
+                        scores: Object.values(room.players).map(p => ({ name: p.name, score: p.score }))
                     });
                 } else {
-                    // Imposter survived
-                    room.status = 'imposterGuessing';
-                    io.to(roomCode).emit('imposterSurvival', { 
+                    // Imposter survived -> Instant win as requested
+                    room.status = 'ended';
+                    room.players[room.imposterId].score += 2;
+                    io.to(roomCode).emit('gameResult', {
+                        winner: 'imposter',
+                        imposterName: room.players[room.imposterId].name,
+                        secretWord: room.secretWord,
                         votedOutName: room.players[votedOutId].name,
-                        imposterId: room.imposterId
+                        scores: Object.values(room.players).map(p => ({ name: p.name, score: p.score }))
                     });
-                    io.to(room.imposterId).emit('promptGuess');
                 }
             }
         }
@@ -173,24 +183,24 @@ io.on('connection', (socket) => {
         if (room && room.status === 'imposterGuessing' && socket.id === room.imposterId) {
             room.status = 'ended';
             if (guess.toLowerCase() === room.secretWord.toLowerCase()) {
-                room.players[room.imposterId].score += 2;
-                io.to(roomCode).emit('gameResult', { 
-                    winner: 'imposter', 
-                    imposterName: room.players[room.imposterId].name, 
+                room.players[room.imposterId].score += 3;
+                io.to(roomCode).emit('gameResult', {
+                    winner: 'imposter',
+                    imposterName: room.players[room.imposterId].name,
                     secretWord: room.secretWord,
                     guess: guess,
-                    scores: Object.values(room.players).map(p => ({name: p.name, score: p.score}))
+                    scores: Object.values(room.players).map(p => ({ name: p.name, score: p.score }))
                 });
             } else {
                 Object.keys(room.players).forEach(pid => {
                     if (pid !== room.imposterId) room.players[pid].score += 1;
                 });
-                io.to(roomCode).emit('gameResult', { 
-                    winner: 'players', 
-                    imposterName: room.players[room.imposterId].name, 
+                io.to(roomCode).emit('gameResult', {
+                    winner: 'players',
+                    imposterName: room.players[room.imposterId].name,
                     secretWord: room.secretWord,
                     guess: guess,
-                    scores: Object.values(room.players).map(p => ({name: p.name, score: p.score}))
+                    scores: Object.values(room.players).map(p => ({ name: p.name, score: p.score }))
                 });
             }
         }
