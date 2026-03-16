@@ -1,0 +1,303 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+:root {
+    --bg-color: #0d0d12;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --primary-neon: #00f2ff;
+    --secondary-neon: #ff007a;
+    --text-color: #ffffff;
+    --text-dim: #a0a0b0;
+    --border-glow: rgba(0, 242, 255, 0.3);
+    --error-neon: #ff3e3e;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+}
+
+/* Background Animation */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(30,30,50,0.5) 0%, rgba(13,13,18,1) 80%);
+    z-index: -1;
+}
+
+.container {
+    width: 90%;
+    max-width: 600px;
+    perspective: 1000px;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, var(--primary-neon), var(--secondary-neon));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus {
+    border-color: var(--primary-neon);
+    box-shadow: 0 0 10px var(--border-glow);
+}
+
+.btn-container {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn {
+    flex: 1;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--primary-neon);
+    color: #000;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--secondary-neon);
+    color: var(--secondary-neon);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 0, 122, 0.1);
+    box-shadow: 0 0 20px rgba(255, 0, 122, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Game Screens */
+.screen {
+    display: none;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Lobby Styles */
+.player-list {
+    list-style: none;
+    margin: 20px 0;
+}
+
+.player-item {
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 10px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.room-display {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.room-code-tag {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary-neon);
+    background: rgba(0, 242, 255, 0.1);
+    padding: 5px 15px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+/* Game Logic UI */
+.role-box {
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.role-box.imposter {
+    background: rgba(255, 0, 122, 0.1);
+    border: 1px solid var(--secondary-neon);
+}
+
+.role-box.player {
+    background: rgba(0, 242, 255, 0.1);
+    border: 1px solid var(--primary-neon);
+}
+
+.role-label {
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.secret-word {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+.turn-indicator {
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.clue-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    scrollbar-width: thin;
+}
+
+.clue-item {
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 3px solid var(--primary-neon);
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+.clue-item .clue-author {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+/* Animations */
+.pulse {
+    animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); box-shadow: 0 0 15px var(--border-glow); }
+    100% { transform: scale(1); }
+}
+
+/* Voting Grid */
+.voting-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.vote-btn {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.3s;
+}
+
+.vote-btn:hover {
+    background: rgba(0, 242, 255, 0.1);
+}
+
+.vote-btn.selected {
+    border: 1px solid var(--primary-neon);
+    background: rgba(0, 242, 255, 0.2);
+}
+
+/* Result Screen */
+.result-header {
+    font-size: 2rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.scoreboard {
+    margin-top: 30px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .glass-card {
+        padding: 25px;
+    }
+    .title {
+        font-size: 1.8rem;
+    }
+    .btn-container {
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imposter Word Game | Neon Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Landing Screen -->
+        <div id="landing-screen" class="screen active">
+            <div class="glass-card">
+                <h1 class="title">IMPOSTER</h1>
+                <div class="input-group">
+                    <label>Enter Your Name</label>
+                    <input type="text" id="player-name" placeholder="Agent 007">
+                </div>
+                <div id="join-room-box" style="display: none; margin-top: 20px;">
+                    <div class="input-group">
+                        <label>Room Code</label>
+                        <input type="text" id="room-code-input" placeholder="ABCDE">
+                    </div>
+                </div>
+                <div class="btn-container">
+                    <button class="btn btn-primary" id="btn-create">Create Room</button>
+                    <button class="btn btn-secondary" id="btn-join-toggle">Join Room</button>
+                </div>
+                <div id="join-action-box" style="display: none; margin-top: 15px;">
+                    <button class="btn btn-primary" id="btn-join-final" style="width: 100%;">Join Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="screen">
+            <div class="glass-card">
+                <h1 class="title">LOBBY</h1>
+                <div class="room-display">
+                    <p>Share this code with friends:</p>
+                    <div class="room-code-tag" id="room-code-display">-----</div>
+                </div>
+                <ul class="player-list" id="player-list-lobby">
+                    <!-- Players will appear here -->
+                </ul>
+                <div id="host-controls" style="display: none; margin-top: 20px;">
+                    <button class="btn btn-primary" id="btn-start" style="width: 100%;">Start Game</button>
+                </div>
+                <p id="wait-message" style="text-align: center; color: var(--text-dim);">Waiting for host to start...</p>
+            </div>
+        </div>
+
+        <!-- Game Screen (Word & Clues) -->
+        <div id="game-screen" class="screen">
+            <div class="glass-card">
+                <div id="role-display" class="role-box">
+                    <div class="role-label" id="role-text">YOUR ROLE</div>
+                    <div class="secret-word" id="word-text">WORD</div>
+                </div>
+                
+                <div class="turn-indicator" id="turn-indicator">
+                    Waiting for <span id="current-player-name" style="color: var(--primary-neon);">...</span>'s clue
+                </div>
+
+                <div class="clue-list" id="clue-list">
+                    <!-- Clues will appear here -->
+                </div>
+
+                <div id="clue-input-box" style="display: none;">
+                    <div class="input-group">
+                        <input type="text" id="clue-input" placeholder="Enter a one-word clue...">
+                    </div>
+                    <button class="btn btn-primary" id="btn-submit-clue" style="width: 100%;">Submit Clue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voting Screen -->
+        <div id="voting-screen" class="screen">
+            <div class="glass-card">
+                <h1 class="title">VOTING</h1>
+                <p style="text-align: center; margin-bottom: 20px;">Who is the Imposter?</p>
+                <div class="voting-grid" id="voting-grid">
+                    <!-- Voting buttons will appear here -->
+                </div>
+                <button class="btn btn-primary" id="btn-submit-vote" style="width: 100%; margin-top: 20px; display: none;">Confirm Vote</button>
+            </div>
+        </div>
+
+        <!-- Imposter Guessing -->
+        <div id="imposter-guess-screen" class="screen">
+            <div class="glass-card">
+                <h1 class="title" style="color: var(--secondary-neon);">SURVIVAL</h1>
+                <p id="survival-msg" style="text-align: center; margin-bottom: 20px;">The Imposter survived!</p>
+                <div id="imposter-input-box" style="display: none;">
+                    <p style="text-align: center; margin-bottom: 10px;">Guess the word to win:</p>
+                    <div class="input-group">
+                        <input type="text" id="imposter-guess-input" placeholder="The word is...">
+                    </div>
+                    <button class="btn btn-primary" id="btn-submit-guess" style="width: 100%;">Submit Guess</button>
+                </div>
+                <p id="imposter-wait-msg" style="text-align: center; color: var(--text-dim); display: none;">Waiting for Imposter to guess...</p>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="screen">
+            <div class="glass-card">
+                <div class="result-header" id="result-title">VICTORY</div>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <p>Imposter was: <span id="res-imposter-name" style="color: var(--secondary-neon);">...</span></p>
+                    <p>Secret word was: <span id="res-secret-word" style="color: var(--primary-neon);">...</span></p>
+                    <p id="res-guess-info"></p>
+                </div>
+                
+                <div class="scoreboard">
+                    <h3 style="margin-bottom: 10px;">Scoreboard</h3>
+                    <ul class="player-list" id="scoreboard-list">
+                        <!-- Scores here -->
+                    </ul>
+                </div>
+
+                <div id="restart-controls" style="display: none; margin-top: 20px;">
+                    <button class="btn btn-primary" id="btn-next-round" style="width: 100%;">Next Round</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="error-toast" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--error-neon); color: black; padding: 10px 20px; border-radius: 8px; display: none; z-index: 100;"></div>
+
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+</body>
+</html>
