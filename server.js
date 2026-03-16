@@ -82,6 +82,7 @@ io.on('connection', (socket) => {
             room.votes = {};
             room.turnOrder = [...playerIds].sort(() => Math.random() - 0.5);
             room.currentTurnIndex = 0;
+            room.currentRound = 1;
 
             // Notify each player of their role/word
             playerIds.forEach(id => {
@@ -89,11 +90,11 @@ io.on('connection', (socket) => {
                 if (id === room.imposterId) {
                     player.role = 'imposter';
                     player.word = null;
-                    io.to(id).emit('gameStarted', { role: 'imposter', turnOrder: room.turnOrder.map(pid => room.players[pid].name), currentTurn: room.players[room.turnOrder[0]].name });
+                    io.to(id).emit('gameStarted', { role: 'imposter', turnOrder: room.turnOrder.map(pid => room.players[pid].name), currentTurn: room.players[room.turnOrder[0]].name, roundInfo: "Round 1 / 2" });
                 } else {
                     player.role = 'player';
                     player.word = room.secretWord;
-                    io.to(id).emit('gameStarted', { role: 'player', word: room.secretWord, turnOrder: room.turnOrder.map(pid => room.players[pid].name), currentTurn: room.players[room.turnOrder[0]].name });
+                    io.to(id).emit('gameStarted', { role: 'player', word: room.secretWord, turnOrder: room.turnOrder.map(pid => room.players[pid].name), currentTurn: room.players[room.turnOrder[0]].name, roundInfo: "Round 1 / 2" });
                 }
             });
         }
@@ -108,19 +109,36 @@ io.on('connection', (socket) => {
                 room.currentTurnIndex++;
 
                 if (room.currentTurnIndex >= room.turnOrder.length) {
-                    // Notify everyone of the last clue and impending transition
-                    io.to(roomCode).emit('clueUpdate', { clues: room.clues, currentTurn: 'Voting starts in 3s...' });
-                    
-                    // Delay voting phase by 3 seconds
-                    setTimeout(() => {
-                        if (rooms[roomCode] && rooms[roomCode].status === 'playing') {
-                            rooms[roomCode].status = 'voting';
-                            io.to(roomCode).emit('votingPhase', { clues: rooms[roomCode].clues, players: Object.values(rooms[roomCode].players).map(p => ({ id: p.id, name: p.name })) });
-                        }
-                    }, 3000);
+                    // Check if we should do another round (Total 2 rounds)
+                    room.currentRound = (room.currentRound || 1) + 1;
+                    if (room.currentRound > 2) {
+                        // Notify everyone of the last clue and impending transition
+                        io.to(roomCode).emit('clueUpdate', { clues: room.clues, currentTurn: 'Voting starts in 3s...' });
+                        
+                        // Delay voting phase by 3 seconds
+                        setTimeout(() => {
+                            if (rooms[roomCode] && rooms[roomCode].status === 'playing') {
+                                rooms[roomCode].status = 'voting';
+                                io.to(roomCode).emit('votingPhase', { clues: rooms[roomCode].clues, players: Object.values(rooms[roomCode].players).map(p => ({ id: p.id, name: p.name })) });
+                            }
+                        }, 3000);
+                    } else {
+                        // Start next round of clues
+                        room.currentTurnIndex = 0;
+                        const firstPlayerId = room.turnOrder[0];
+                        io.to(roomCode).emit('clueUpdate', { 
+                            clues: room.clues, 
+                            currentTurn: room.players[firstPlayerId].name,
+                            roundInfo: `Round ${room.currentRound} / 2`
+                        });
+                    }
                 } else {
                     const nextPlayerId = room.turnOrder[room.currentTurnIndex];
-                    io.to(roomCode).emit('clueUpdate', { clues: room.clues, currentTurn: room.players[nextPlayerId].name });
+                    io.to(roomCode).emit('clueUpdate', { 
+                        clues: room.clues, 
+                        currentTurn: room.players[nextPlayerId].name,
+                        roundInfo: `Round ${room.currentRound || 1} / 2`
+                    });
                 }
             }
         }

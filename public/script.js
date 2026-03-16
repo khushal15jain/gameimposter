@@ -156,9 +156,9 @@ socket.on('gameStarted', ({ role, word, turnOrder, currentTurn }) => {
     showScreen('game');
 });
 
-socket.on('clueUpdate', ({ clues, currentTurn }) => {
+socket.on('clueUpdate', ({ clues, currentTurn, roundInfo }) => {
     renderClues(clues);
-    updateTurnIndicator(currentTurn);
+    updateTurnIndicator(currentTurn, roundInfo);
 });
 
 socket.on('votingPhase', ({ clues, players }) => {
@@ -258,8 +258,11 @@ function updatePlayerList(players) {
     `).join('');
 }
 
-function updateTurnIndicator(turnName) {
+function updateTurnIndicator(turnName, roundInfo) {
     currentPlayerName.innerText = turnName;
+    const roundText = roundInfo ? `<br><small style="color: var(--text-dim)">${roundInfo}</small>` : "";
+    document.getElementById('turn-indicator').innerHTML = `Waiting for <span id="current-player-name" style="color: var(--primary-neon);">${turnName}</span>'s clue${roundText}`;
+    
     if (turnName === myName) {
         clueInputBox.style.display = 'block';
         document.getElementById('turn-indicator').classList.add('pulse');
